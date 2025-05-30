@@ -12,3 +12,4 @@ id.json
 anchor.json
 block_relayer/for_tests/*
 !block_relayer/for_tests/.bitcoin.conf
+.idea
