@@ -242,7 +242,7 @@ describe("btc-relay", () => {
 
         const receiverBalanceBefore = await provider.connection.getBalance(mintReceiver);
 
-        console.log("PK: ", mintAuthPK.toBase58())
+        console.log("bump: ", mintAuthBump);
 
         const ix = await programBtcRelay.methods
             .verifySmallTx(
@@ -257,7 +257,7 @@ describe("btc-relay", () => {
                 mint: mintKeypair.publicKey,
                 signer: signer.publicKey,
                 mainState: mainStateKey,
-                mintReceiver
+                mintReceiver,
             })
             .signers([signer])
             .instruction();

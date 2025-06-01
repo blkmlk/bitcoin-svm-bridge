@@ -112,10 +112,18 @@ pub struct VerifyTransaction<'info> {
         bump
     )]
     pub main_state: AccountLoader<'info, MainState>,
+
     /// CHECK: for authority only
     pub mint_receiver: AccountInfo<'info>,
     #[account(mut)]
     pub mint: Account<'info, Mint>,
+
+    #[account(
+    seeds = [b"mint_auth".as_ref()],
+    bump
+    )]
+    /// CHECK: for authority only
+    pub mint_authority: AccountInfo<'info>,
 
     #[account(
     init_if_needed,

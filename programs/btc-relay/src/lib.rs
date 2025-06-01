@@ -24,7 +24,7 @@ pub mod btc_relay {
     use anchor_spl::token;
     use anchor_spl::token::{spl_token, MintTo};
     use anchor_spl::token_interface::spl_token_metadata_interface::borsh::max_serialized_size;
-    use log::log;
+    use std::io::Read;
 
     // Initializes the program with the initial block header,
     // this can be any past block header with high enough confirmations to be sure it doesn't get re-orged.
@@ -382,7 +382,7 @@ pub mod btc_relay {
     // before the instructions that depend on transaction verification
     pub fn verify_small_tx(
         ctx: Context<VerifyTransaction>,
-        tx_bytes: Vec<u8>,
+        raw_tx: Vec<u8>,
         confirmations: u32,
         tx_index: u32,
         reversed_merkle_proof: Vec<[u8; 32]>,
@@ -404,7 +404,7 @@ pub mod btc_relay {
             RelayErrorCode::PrevBlockCommitment
         );
 
-        let bitcoin_tx = Transaction::consensus_decode(&mut tx_bytes.as_slice()).unwrap();
+        let bitcoin_tx = Transaction::consensus_decode(&mut raw_tx.as_slice()).unwrap();
         let amount_to_transfer =
             bridge_mint_amount(&bitcoin_tx, ctx.accounts.mint_receiver.key().to_bytes());
 
@@ -429,7 +429,7 @@ pub mod btc_relay {
             MintTo {
                 mint: ctx.accounts.mint.to_account_info(),
                 to: ctx.accounts.to.to_account_info(),
-                authority: ctx.accounts.mint_receiver.to_account_info(),
+                authority: ctx.accounts.mint_authority.to_account_info(),
             },
             signer,
         );
