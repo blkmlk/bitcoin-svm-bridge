@@ -1,7 +1,8 @@
-use anchor_lang::prelude::*;
-
 use crate::state::*;
 use crate::structs::*;
+use anchor_lang::prelude::*;
+use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token::{Mint, Token, TokenAccount};
 
 #[derive(Accounts)]
 #[instruction(
@@ -111,10 +112,21 @@ pub struct VerifyTransaction<'info> {
         bump
     )]
     pub main_state: AccountLoader<'info, MainState>,
-    #[account(mut, seeds = [b"solana_deposit".as_ref()], bump)]
-    pub deposit_account: AccountLoader<'info, DepositState>,
+    /// CHECK: for authority only
+    pub mint_receiver: AccountInfo<'info>,
     #[account(mut)]
-    pub mint_receiver: SystemAccount<'info>,
+    pub mint: Account<'info, Mint>,
+
+    #[account(
+    init_if_needed,
+    payer = signer,
+    associated_token::mint = mint,
+    associated_token::authority = mint_receiver,
+    )]
+    pub to: Account<'info, TokenAccount>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -149,7 +161,8 @@ pub struct InitBigTxVerify<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
     /// The program's account used to store transaction's data. This should be a derived PDA (Program Derived Address).
-    #[account(init, seeds = [tx_id.as_slice()], bump, payer = signer, space = 8 + 4 + tx_size as usize)]
+    #[account(init, seeds = [tx_id.as_slice()], bump, payer = signer, space = 8 + 4 + tx_size as usize
+    )]
     pub tx_account: Account<'info, BigTxState>,
     pub system_program: Program<'info, System>,
     #[account(

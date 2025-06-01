@@ -21,6 +21,10 @@ declare_id!("3YS97dtVcWjXUnR8JrZUm1oACYdjhoNQEuMM7y7VdvTa");
 pub mod btc_relay {
     use super::*;
     use crate::utils::bridge_mint_amount;
+    use anchor_spl::token;
+    use anchor_spl::token::{spl_token, MintTo};
+    use anchor_spl::token_interface::spl_token_metadata_interface::borsh::max_serialized_size;
+    use log::log;
 
     // Initializes the program with the initial block header,
     // this can be any past block header with high enough confirmations to be sure it doesn't get re-orged.
@@ -383,6 +387,7 @@ pub mod btc_relay {
         tx_index: u32,
         reversed_merkle_proof: Vec<[u8; 32]>,
         commited_header: CommittedBlockHeader,
+        mint_bump: u8,
     ) -> Result<()> {
         let block_height = commited_header.blockheight;
 
@@ -416,14 +421,21 @@ pub mod btc_relay {
             RelayErrorCode::MerkleRoot
         );
 
-        let sol_amount = amount_to_transfer * 10;
+        let seeds: &[&[u8]] = &[b"mint_auth", &[mint_bump]];
+        let signer: &[&[&[u8]]] = &[seeds];
 
-        **ctx
-            .accounts
-            .deposit_account
-            .as_ref()
-            .try_borrow_mut_lamports()? -= sol_amount;
-        **ctx.accounts.mint_receiver.try_borrow_mut_lamports()? += sol_amount;
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            MintTo {
+                mint: ctx.accounts.mint.to_account_info(),
+                to: ctx.accounts.to.to_account_info(),
+                authority: ctx.accounts.mint_receiver.to_account_info(),
+            },
+            signer,
+        );
+
+        token::mint_to(cpi_ctx, amount_to_transfer)?;
+
         Ok(())
     }
 

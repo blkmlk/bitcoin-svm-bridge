@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{self, Burn, Mint, MintTo, Token, TokenAccount};
 
-declare_id!("3SwR7pjFatggg2B9YNrbajF8NSmZT382maiwawVbgzcn");
+declare_id!("HcM4LfnygJcEv4rhpJojre5MaNbjLSSwdDuo3XStNdRN");
 
 const BITCOIN_DECIMALS: u8 = 8;
 
@@ -17,11 +17,6 @@ pub mod btc_token {
     use super::*;
 
     pub fn initialize_mint(_ctx: Context<InitializeMintAccount>) -> Result<()> {
-        Ok(())
-    }
-
-    pub fn mint_tokens(ctx: Context<MintTokens>, amount: u64) -> Result<()> {
-        token::mint_to(ctx.accounts.into_mint_to_context(), amount)?;
         Ok(())
     }
 
@@ -56,44 +51,6 @@ pub struct InitializeMintAccount<'info> {
     pub rent: Sysvar<'info, Rent>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
-}
-
-#[derive(Accounts)]
-pub struct MintTokens<'info> {
-    #[account(mut)]
-    pub mint: Account<'info, Mint>,
-
-    #[account(
-        init_if_needed,
-        payer = signer,
-        associated_token::mint = mint,
-        associated_token::authority = recipient,
-    )]
-    pub to: Account<'info, TokenAccount>,
-
-    /// CHECK: the receiver of the tokens
-    pub recipient: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub signer: Signer<'info>,
-
-    pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
-    pub rent: Sysvar<'info, Rent>,
-}
-
-impl<'info> MintTokens<'info> {
-    fn into_mint_to_context(&self) -> CpiContext<'_, '_, '_, 'info, MintTo<'info>> {
-        CpiContext::new(
-            self.token_program.to_account_info(),
-            MintTo {
-                mint: self.mint.to_account_info(),
-                to: self.to.to_account_info(),
-                authority: self.recipient.to_account_info(),
-            },
-        )
-    }
 }
 
 #[derive(Accounts)]
