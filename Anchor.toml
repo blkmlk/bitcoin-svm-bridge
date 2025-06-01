@@ -1,5 +1,5 @@
 [toolchain]
-anchor_version = "0.30.1"
+anchor_version = "0.31.1"
 
 [features]
 seeds = false
@@ -10,6 +10,7 @@ btc-token = "3SwR7pjFatggg2B9YNrbajF8NSmZT382maiwawVbgzcn"
 btc_relay = "3YS97dtVcWjXUnR8JrZUm1oACYdjhoNQEuMM7y7VdvTa"
 
 [programs.mainnet]
+btc-token = "3SwR7pjFatggg2B9YNrbajF8NSmZT382maiwawVbgzcn"
 btc_relay = "3YS97dtVcWjXUnR8JrZUm1oACYdjhoNQEuMM7y7VdvTa"
 
 [registry]

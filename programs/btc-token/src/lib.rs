@@ -13,7 +13,7 @@ pub struct BurnTo {
 }
 
 #[program]
-pub mod wbtc {
+pub mod btc_token {
     use super::*;
 
     pub fn initialize_mint(_ctx: Context<InitializeMintAccount>) -> Result<()> {
@@ -41,7 +41,7 @@ pub mod wbtc {
 pub struct InitializeMintAccount<'info> {
     #[account(
         init,
-        payer = payer,
+        payer = signer,
         mint::decimals = BITCOIN_DECIMALS,
         mint::authority = mint_authority,
         mint::freeze_authority = mint_authority,
@@ -52,7 +52,7 @@ pub struct InitializeMintAccount<'info> {
     pub mint_authority: AccountInfo<'info>,
 
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub signer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -65,17 +65,17 @@ pub struct MintTokens<'info> {
 
     #[account(
         init_if_needed,
-        payer = payer,
+        payer = signer,
         associated_token::mint = mint,
-        associated_token::authority = authority,
+        associated_token::authority = recipient,
     )]
     pub to: Account<'info, TokenAccount>,
 
-    /// CHECK: used only for reading the address
-    pub authority: AccountInfo<'info>,
+    /// CHECK: the receiver of the tokens
+    pub recipient: AccountInfo<'info>,
 
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub signer: Signer<'info>,
 
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -90,7 +90,7 @@ impl<'info> MintTokens<'info> {
             MintTo {
                 mint: self.mint.to_account_info(),
                 to: self.to.to_account_info(),
-                authority: self.authority.to_account_info(),
+                authority: self.recipient.to_account_info(),
             },
         )
     }
@@ -102,7 +102,7 @@ pub struct BurnTokens<'info> {
     pub mint: Account<'info, Mint>,
     #[account(mut)]
     pub from: Account<'info, TokenAccount>,
-    pub authority: Signer<'info>,
+    pub signer: Signer<'info>,
     pub token_program: Program<'info, Token>,
 }
 
@@ -113,7 +113,7 @@ impl<'info> BurnTokens<'info> {
             Burn {
                 mint: self.mint.to_account_info(),
                 from: self.from.to_account_info(),
-                authority: self.authority.to_account_info(),
+                authority: self.signer.to_account_info(),
             },
         )
     }
